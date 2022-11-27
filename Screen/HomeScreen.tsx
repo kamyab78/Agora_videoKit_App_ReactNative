@@ -52,13 +52,15 @@ import {
 import {sha256} from 'js-sha256';
 import {Linking} from 'react-native';
 import ManIcon from '../Asset/man.png'
+
+
 const appId = '504210131f4f4b1e8c07f2929e67e793';
 const channelName = 'testchannelMetaData';
 const token = '';
 const uid = 0;
 var connectionData: any = {};
 var session:any = null
-const HomeScreen = (route: any) => {
+const HomeScreen = (route: any ) => {
   const scrollViewRef:any = useRef();
   const isDarkMode = useColorScheme() === 'dark';
   const passwordInputRef = createRef();
@@ -78,6 +80,9 @@ const HomeScreen = (route: any) => {
   const [userMessage, setuserMessage] = useState('');
   const [channelNameRomm,setchannelNameRoom]=useState('')
   const [messageHistory,setmessageHistory]= useState<any>([])
+
+
+
   const getPermission = async () => {
     if (Platform.OS === 'android') {
       await PermissionsAndroid.requestMultiple([
@@ -86,7 +91,14 @@ const HomeScreen = (route: any) => {
       ]);
     }
   };
+
   useEffect(() => {
+    let hashData = sha256(route.route.params.signature);
+    console.log(hashData);
+
+    // console.log('route', route);
+    // get data from screen to screen
+    console.log(route.route.params,'params');
     console.log(route.route.params);
     if (route.route.params !== undefined) {
       console.log(route.route.params.username);

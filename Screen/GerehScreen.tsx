@@ -24,6 +24,7 @@
 import { Text } from 'react-native-paper';
 import WebView from 'react-native-webview';
 // import { useNavigation } from '@react-navigation/native';
+import {Config} from '../Config/Hostaddress';
 
   const GerehScreen = ( route : any) => {
     const webviewRef = useRef(null);
@@ -65,7 +66,7 @@ if(handleReceivedMessage?.type === 'verse-signature'){
             javaScriptEnabledAndroid={true}
             injectedJavaScript={INJECTED_JAVASCRIPT}
             originWhitelist={['*']}
-            source={{uri: '127.0.0.1:3000'}}
+            source={{uri: Config()['gerehUrl']}}
             onMessage={handleMessage}
             />
 

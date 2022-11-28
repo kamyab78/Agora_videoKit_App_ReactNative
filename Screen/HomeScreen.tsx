@@ -60,6 +60,7 @@ const token = '';
 const uid = 0;
 var connectionData: any = {};
 var session:any = null
+var roomname=""
 const HomeScreen = (route: any ) => {
   const scrollViewRef:any = useRef();
   const isDarkMode = useColorScheme() === 'dark';
@@ -80,6 +81,7 @@ const HomeScreen = (route: any ) => {
   const [userMessage, setuserMessage] = useState('');
   const [channelNameRomm,setchannelNameRoom]=useState('')
   const [messageHistory,setmessageHistory]= useState<any>([])
+  const [roomNamevar,setroomNamevar]=useState('')
 
 
 
@@ -93,44 +95,74 @@ const HomeScreen = (route: any ) => {
   };
 
   useEffect(() => {
-    let hashData = sha256(route.route.params.signature);
-    console.log(hashData);
+    let signature = route.route.params.signature
+    let jwt = route.route.params.jwt
+    verifyTogereh(signature,jwt)
 
-    // console.log('route', route);
-    // get data from screen to screen
-    console.log(route.route.params,'params');
-    console.log(route.route.params);
-    if (route.route.params !== undefined) {
-      console.log(route.route.params.username);
-      console.log(route.route.params.password);
-      console.log(route.route.params.channelname);
-      setchannelNameRoom(route.route.params.channelname)
-      // setUserName(route.route.params.username)
-      // setUserPassword(route.route.params.password)
+  }, []);
 
-      var idHash = sha256(
-        route.route.params.username + route.route.params.password,
-      );
-      handleSubmitPress(
-        idHash,
-        route.route.params.username,
-        route.route.params.channelname,
-      );
-   
+  const verifyTogereh  =(signature:any, jwt:any)=>{
+    const body ={
+      'signature':signature
     }
-  }, [route]);
+    var requestOptions = {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'Accept': '*/*',
+          "Authorization": "Barer " + jwt
 
+      },
+      body:JSON.stringify(body)
+
+
+  };
+
+  fetch(Config()['gerehUrlApi'] + "game/verify_event_signature/", requestOptions)
+      .then(response => {
+
+
+     
+          response.json().then(rep => {
+              console.log(rep)
+                  // handleSubmitPress(
+    //   idHash,
+    //   route.route.params.username,
+    //   route.route.params.channelname,
+    // );
+
+          })
+
+
+
+
+
+      })
+      .catch(error => console.log('error', error));
+      
+  }
   const rtcCallbacks = {
     EndCall: () => setstep(0),
   };
   const handleSubmitPress = async (
-    idHash: any,
-    usernameUser: any,
-    channelName: any,
+    signature: any,
+    jwt: any,
+   
   ) => {
     var client = new Client('defaultkey', Config()['baseUrl'], '', true);
     try {
-     session = await client.authenticateCustom(idHash, false, usernameUser);
+      var dict:any =[]
+      dict.push({
+        key:   "gauth",
+        value: "true"
+    },{
+      key:   "signature",
+      value: signature
+  },{
+    key:   "jwt_token",
+    value: jwt
+});
+     session = await client.authenticateCustom("<id>", true,"<username>", dict);
 
       connectionData = {
         appId: '504210131f4f4b1e8c07f2929e67e793',

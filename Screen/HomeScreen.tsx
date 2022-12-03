@@ -38,7 +38,7 @@ import AgoraUIKit from 'agora-rn-uikit';
 import ImagefirstPage from '../Asset/background.png';
 import {Client, Socket} from '@heroiclabs/nakama-js';
 import {Config} from '../Config/Hostaddress';
-import {decode as atob, encode as btoa} from 'base-64';
+
 import ChatIcon from '../Asset/chat.png';
 import {FAB} from 'react-native-paper';
 import SendIcon from '../Asset/send-message.png';
@@ -49,7 +49,7 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import {sha256} from 'js-sha256';
+
 import {Linking} from 'react-native';
 import ManIcon from '../Asset/man.png'
 
@@ -61,6 +61,7 @@ const uid = 0;
 var connectionData: any = {};
 var session:any = null
 var roomname=""
+var client ;
 const HomeScreen = (route: any ) => {
   const scrollViewRef:any = useRef();
   const isDarkMode = useColorScheme() === 'dark';
@@ -97,11 +98,14 @@ const HomeScreen = (route: any ) => {
   useEffect(() => {
     let signature = route.route.params.signature
     let jwt = route.route.params.jwt
+  client = new Client('defaultkey', Config()['baseUrl'], '', true)
     verifyTogereh(signature,jwt)
 
   }, []);
 
   const verifyTogereh  =(signature:any, jwt:any)=>{
+    //  console.log( signature)
+    //  console.log(jwt)
     const body ={
       'signature':signature
     }
@@ -110,7 +114,7 @@ const HomeScreen = (route: any ) => {
       headers: {
           'Content-Type': 'application/json',
           'Accept': '*/*',
-          "Authorization": "Barer " + jwt
+          "Authorization": "Bearer " + jwt
 
       },
       body:JSON.stringify(body)
@@ -125,6 +129,8 @@ const HomeScreen = (route: any ) => {
      
           response.json().then(rep => {
               console.log(rep)
+              console.log(rep.data.id)
+AuthFunc(rep.data.id,signature,jwt)
                   // handleSubmitPress(
     //   idHash,
     //   route.route.params.username,
@@ -141,50 +147,62 @@ const HomeScreen = (route: any ) => {
       .catch(error => console.log('error', error));
       
   }
+  function findMatchName (Gereheventid:any){
+    
+  }
   const rtcCallbacks = {
     EndCall: () => setstep(0),
   };
-  const handleSubmitPress = async (
+  const AuthFunc = async (
+    Gereheventid:any,
     signature: any,
     jwt: any,
    
   ) => {
-    var client = new Client('defaultkey', Config()['baseUrl'], '', true);
+  
     try {
-      var dict:any =[]
-      dict.push({
-        key:   "gauth",
-        value: "true"
-    },{
-      key:   "signature",
-      value: signature
-  },{
-    key:   "jwt_token",
-    value: jwt
-});
-     session = await client.authenticateCustom("<id>", true,"<username>", dict);
+//       var dict:any =[]
+//       dict.push({
+//         key:   "gauth",
+//         value: "true"
+//     },{
+//       key:   "signature",
+//       value: signature
+//   },{
+//     key:   "jwt_token",
+//     value: jwt
+// });
 
+const dict: Record<string, string> = {
+  "jwt_token": jwt,
+  "signature":signature,
+  "gauth":"yes"
+}
+
+     await client.authenticateCustom('<id>', true,"<username>", dict);
+     console.log(session)
       connectionData = {
         appId: '504210131f4f4b1e8c07f2929e67e793',
         channel: channelName,
         token: '',
       };
-      ConnectTochat(
-        channelName,
-        session
-      );
-      setstep(1);
+      // findMatchName(Gereheventid)
+      // ConnectTochat(
+      //   channelName,
+      //   session
+      // );
+      // setstep(1);
     } catch (error: any) {
-      console.log(error.status);
-      if (error.status === 404) {
-        if (Platform.OS === 'android') {
-          ToastAndroid.show(
-            'کاربری با این نام کاربری و رمز عبور وجود ندارد',
-            ToastAndroid.SHORT,
-          );
-        }
-      }
-      return;
+      console.log(error);
+      // if (error.status === 404) {
+      //   if (Platform.OS === 'android') {
+      //     ToastAndroid.show(
+      //       'کاربری با این نام کاربری و رمز عبور وجود ندارد',
+      //       ToastAndroid.SHORT,
+      //     );
+      //   }
+      // }
+      // return;
     }
     // console.log(password)
     // var idHash=  sha256(userName+userPassword);

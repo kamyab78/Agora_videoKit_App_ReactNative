@@ -44,6 +44,7 @@ if(handleReceivedMessage?.type === 'verse-signature'){
         signature: signature,
         jwt: jwt
     });
+  
 }
 }
 

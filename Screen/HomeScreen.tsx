@@ -52,7 +52,7 @@ import {
 
 import {Linking} from 'react-native';
 import ManIcon from '../Asset/man.png'
-
+import {decode as atob, encode as btoa} from 'base-64';
 
 const appId = '504210131f4f4b1e8c07f2929e67e793';
 const channelName = 'testchannelMetaData';
@@ -70,7 +70,7 @@ const HomeScreen = (route: any ) => {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
-  const [step, setstep] = useState(0);
+  const [step, setstep] = useState(1);
   const [isJoined, setIsJoined] = useState(false); // Indicates if the local user has joined the channel
   const [isHost, setIsHost] = useState(true); // Client role
   const [remoteUid, setRemoteUid] = useState(0); // Uid of the remote user
@@ -83,7 +83,7 @@ const HomeScreen = (route: any ) => {
   const [channelNameRomm,setchannelNameRoom]=useState('')
   const [messageHistory,setmessageHistory]= useState<any>([])
   const [roomNamevar,setroomNamevar]=useState('')
-
+  const [isShow,setisShow]=useState(false)
 
 
   const getPermission = async () => {
@@ -98,12 +98,13 @@ const HomeScreen = (route: any ) => {
   useEffect(() => {
     let signature = route.route.params.signature
     let jwt = route.route.params.jwt
+ 
   client = new Client('defaultkey', Config()['baseUrl'], '', true)
-    verifyTogereh(signature,jwt)
+    verifyTogereh(client,signature,jwt)
 
   }, []);
 
-  const verifyTogereh  =(signature:any, jwt:any)=>{
+  const verifyTogereh  =(client:any,signature:any, jwt:any)=>{
     //  console.log( signature)
     //  console.log(jwt)
     const body ={
@@ -130,7 +131,7 @@ const HomeScreen = (route: any ) => {
           response.json().then(rep => {
               console.log(rep)
               console.log(rep.data.id)
-AuthFunc(rep.data.id,signature,jwt)
+AuthFunc(client,rep.data.id,signature,jwt)
                   // handleSubmitPress(
     //   idHash,
     //   route.route.params.username,
@@ -147,13 +148,48 @@ AuthFunc(rep.data.id,signature,jwt)
       .catch(error => console.log('error', error));
       
   }
-  function findMatchName (Gereheventid:any){
-    
+  async function getAppIdAgora (client:any,Gereheventid:any){
+    console.log("geeeeeeeeeeeeeeeeet")
+    // const payload = { "PokemonName": "dragonite"};
+    try {
+const rpcid = "get_agora_app_id";
+const agoraappid = await client.rpc(session, rpcid, {});
+findMatchName(Gereheventid,agoraappid.payload.appId)
+console.log(agoraappid.payload.appId)
+
+} catch (error: any) {
+  console.log(error)
+}
+  }
+  async function findMatchName (Gereheventid:any,appId:any){
+    try{
+    const payload = { "eventId": JSON.stringify(Gereheventid)};
+    const rpcid = "get_or_create_event_match";
+    const eventName = await client.rpc(session, rpcid, payload);
+console.log(appId)
+
+    console.log(eventName.payload.match.matchId)
+              connectionData = {
+      appId: appId,
+      channel: eventName.payload.match.matchId,
+      token: '',
+    };
+    setTimeout(myGreeting, 3000);
+    function myGreeting(){
+      setisShow(true)
+    }
+
+    setchannelNameRoom(eventName.payload.match.matchId);
+    ConnectTochat(eventName.payload.match.matchId)
+
+  } catch (error: any) {}
   }
   const rtcCallbacks = {
-    EndCall: () => setstep(0),
+    
+    EndCall: () => route.navigation.push('Gereh',{}),
   };
   const AuthFunc = async (
+    client:any,
     Gereheventid:any,
     signature: any,
     jwt: any,
@@ -161,38 +197,39 @@ AuthFunc(rep.data.id,signature,jwt)
   ) => {
   
     try {
-//       var dict:any =[]
-//       dict.push({
-//         key:   "gauth",
-//         value: "true"
-//     },{
-//       key:   "signature",
-//       value: signature
-//   },{
-//     key:   "jwt_token",
-//     value: jwt
-// });
+      console.log("nakama auth")
+      console.log(client)
+
+      console.log(jwt)
+      console.log(signature)
+      console.log(Gereheventid)
 
 const dict: Record<string, string> = {
   "jwt_token": jwt,
   "signature":signature,
   "gauth":"yes"
 }
+// const dict ={
+//   "jwt_token": jwt,
+//   "signature":signature,
+//   "gauth":"yes"
+// }
+console.log(dict)
+    session = await client.authenticateCustom('<id>', true,"<username>", dict);
+// console.log(JSON.parse(session))
+console.log("end auth")
+getAppIdAgora(client,Gereheventid)
 
-     await client.authenticateCustom('<id>', true,"<username>", dict);
-     console.log(session)
-      connectionData = {
-        appId: '504210131f4f4b1e8c07f2929e67e793',
-        channel: channelName,
-        token: '',
-      };
-      // findMatchName(Gereheventid)
+
+     
+//       findMatchName(Gereheventid)
       // ConnectTochat(
       //   channelName,
       //   session
       // );
       // setstep(1);
     } catch (error: any) {
+      console.log("Eroooooooooooooooooooor")
       console.log(error);
       // if (error.status === 404) {
       //   if (Platform.OS === 'android') {
@@ -224,8 +261,8 @@ const dict: Record<string, string> = {
   };
  
   const ConnectTochat = async (
-    roomName: any,
-    session:any
+    roomName: any
+    // session:any
   ) => {
 
     var client = new Client('defaultkey', Config()['baseUrl'], '', true);
@@ -310,11 +347,15 @@ const limit = 100;
 const forward = true;
 
 const result = await client.listChannelMessages(session, channelId, limit, forward, null);
+// setmessageHistory([])
+  var arr:any = []
 result.messages.forEach((message) => {
-  var arr:any = messageHistory
+// arr=messageHistory
   var mess = {"username":message.username,"content":message.content.message}
   arr.push(mess)
   setmessageHistory([...arr])
+    // setmessageHistory(arr)
+
   console.log("%o: %o", message.username, message.content.message);
   // console.log("%o: %o", message);
 
@@ -326,7 +367,7 @@ result.messages.forEach((message) => {
   //     ToastAndroid.show("کاربری با این نام کاربری و رمز عبور وجود ندارد", ToastAndroid.SHORT)
   //   }
   // }
-  // return
+  // retur
 }
   }
 
@@ -466,10 +507,16 @@ result.messages.forEach((message) => {
           onPress={() => setchatShow(true)}>
           <Image style={styles.iconstyle} source={ChatIcon} />
         </TouchableOpacity>
-        <AgoraUIKit
+      {isShow?(
+                       <AgoraUIKit
+      
           connectionData={connectionData}
           rtcCallbacks={rtcCallbacks}
         />
+      ):null}
+   
+       
+
       </>
     )
   ) : null;
@@ -675,6 +722,11 @@ fontSize:14
 
 color:'black',
 fontSize:23
+  },
+  viewAgora:{
+    width:'100%',
+    height:"100%",
+    display:'none'
   }
 });
 

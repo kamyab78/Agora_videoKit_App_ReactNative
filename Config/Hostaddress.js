@@ -4,5 +4,10 @@ export const Config = () => {
         // 'baseUrl':'nakama-api.gerehverse.com',
         'gerehUrl':'https://stage-gereh.darkube.app/',
         "gerehUrlApi":"https://gereh-api.darkube.app/"
+
+
+        // 'baseUrl':'nakama-api.gerehverse.com',
+        // 'gerehUrl':'https://gerehverse.com/',
+        // "gerehUrlApi":"https://api.gerehverse.com"
     }
 }

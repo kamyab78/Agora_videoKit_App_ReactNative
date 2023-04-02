@@ -59,7 +59,7 @@ const channelName = 'testchannelMetaData';
 const token = '';
 const uid = 0;
 var connectionData: any = {};
-var session:any = null
+let session:any = {}
 var roomname=""
 var client ;
 const HomeScreen = (route: any ) => {
@@ -97,7 +97,10 @@ const HomeScreen = (route: any ) => {
 
   useEffect(() => {
     let signature = route.route.params.signature
-    let jwt = route.route.params.jwt
+    let jwt = route.route.params.jwt  
+
+    console.log(jwt)
+    console.log(signature)
  
   client = new Client('defaultkey', Config()['baseUrl'], '', true)
     verifyTogereh(client,signature,jwt)
@@ -151,6 +154,7 @@ AuthFunc(client,rep.data.id,signature,jwt)
   async function getAppIdAgora (client:any,Gereheventid:any){
     console.log("geeeeeeeeeeeeeeeeet")
     // const payload = { "PokemonName": "dragonite"};
+    console.log(client)
     try {
 const rpcid = "get_agora_app_id";
 const agoraappid = await client.rpc(session, rpcid, {});
@@ -188,6 +192,9 @@ console.log(appId)
     
     EndCall: () => route.navigation.push('Gereh',{}),
   };
+  function b64_to_utf8( str ) {
+    return decodeURIComponent(escape(atob( str )));
+}
   const AuthFunc = async (
     client:any,
     Gereheventid:any,
@@ -204,19 +211,23 @@ console.log(appId)
       console.log(signature)
       console.log(Gereheventid)
 
-const dict: Record<string, string> = {
-  "jwt_token": jwt,
-  "signature":signature,
-  "gauth":"yes"
-}
-// const dict ={
+// const dict: Record<string, string> = {
 //   "jwt_token": jwt,
 //   "signature":signature,
 //   "gauth":"yes"
 // }
+const dict ={
+  "jwt_token": jwt,
+  "signature":signature,
+  "gauth":"yes",
+  "skipResponse":"yes"
+}
 console.log(dict)
-    session = await client.authenticateCustom('<id>', true,"<username>", dict);
-// console.log(JSON.parse(session))
+// session=""
+session = await client.authenticateCustom('<id>', true,"<username>", dict);
+// session= re
+// console.log(response)
+console.log(session)
 console.log("end auth")
 getAppIdAgora(client,Gereheventid)
 
